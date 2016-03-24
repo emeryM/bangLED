@@ -26,16 +26,22 @@
   <div class="container">
     <div class="content">
       <h1>Oooh, shiny!</h1>
-      <div class="buttons">
+      <h3>Solid Colors</h3>
+      <div class="leds">
         {{> led number="0"}}
         {{> led number="1"}}
         {{> led number="2"}}
         {{> led number="3"}}
         {{> led number="4"}}
-    </div>
-    <div class="colorpicker">
-      {{> colorpicker}}
-    </div>
+      </div>
+      <div class="colorpicker">
+        {{> colorpicker}}
+      </div>
+      <h3>Animations</h3>
+      <div class="animations">
+        {{> animation number="0" name="Rainbow"}}
+        {{> animation number="1" name="US Flag"}}
+      </div>
     </div>
   </div><!-- /.container -->
 </body>
@@ -46,4 +52,8 @@
 
 <template name="colorpicker">
   <input type="text" id="colorpicker">
+</template>
+
+<template name="animation">
+  <button>{{name}}</button>
 </template>

@@ -2,7 +2,19 @@ if (Meteor.isClient) {
 
   Template.led.events({
     'click button': function () {
-      Meteor.call("blink", Template.currentData().number);
+      Meteor.call(
+        "setColor",
+        Template.currentData().number,
+        $("#colorpicker").spectrum("get"));
+    }
+  });
+
+  Template.animation.events({
+    'click button': function () {
+      Meteor.call(
+        "setAnimation",
+        Template.currentData().number
+      )
     }
   });
 
@@ -30,6 +42,7 @@ if (Meteor.isClient) {
     },
     change: function(color) {
       Meteor.call("logColor", color);
+      Session.set('selectedColor', color);
     },
     palette: [
         ["rgb(0, 0, 0)", "rgb(67, 67, 67)", "rgb(102, 102, 102)",
@@ -68,6 +81,34 @@ if (Meteor.isServer) {
   });
 
   Meteor.methods({
+      setColor: function (pos, color){
+        var buf = new Buffer(5);
+        buf[0]= 0x00;
+        buf[1]= pos;
+        buf[2]= color._r;
+        buf[3]= color._g;
+        buf[4]= color._b;
+        serialPort.write(buf, function(err, results) {
+            if (err) {
+                console.log('err ' + err);
+            }
+            console.log('wrote ' + results + ' bytes');
+        });
+      },
+      setAnimation: function (selection){
+        var buf = new Buffer(5);
+        buf[0]= 0x01;
+        buf[1]= selection;
+        buf[2]= 0x00;
+        buf[3]= 0x00;
+        buf[4]= 0x00;
+        serialPort.write(buf, function(err, results) {
+            if (err) {
+                console.log('err ' + err);
+            }
+            console.log('wrote ' + results + ' bytes');
+        });
+      },
       blink: function (pos){
         console.log('pos: ' + pos);
         serialPort.write(new Buffer([pos], 'ascii'), function(err, results) {
