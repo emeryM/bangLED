@@ -16,39 +16,56 @@
       </div>
       <div id="navbar" class="collapse navbar-collapse">
         <ul class="nav navbar-nav">
-          <li class="active"><a href="#">A</a></li>
-          <li><a href="#about">B</a></li>
-          <li><a href="#contact">C</a></li>
+          <li class="active"><a href="#">Display Mode</a></li>
+          <li><a href="#about">Twitter Mode</a></li>
+          <li><a href="#contact">Off</a></li>
         </ul>
       </div><!--/.nav-collapse -->
     </div>
   </nav>
   <div class="container">
     <div class="content">
-      <h1>Oooh, shiny!</h1>
-      <h3>Solid Colors</h3>
-      <div class="leds">
-        {{> led number="0"}}
-        {{> led number="1"}}
-        {{> led number="2"}}
-        {{> led number="3"}}
-        {{> led number="4"}}
-      </div>
+      <h1>Display Mode</h1>
       <div class="colorpicker">
         {{> colorpicker}}
+      </div>
+      <h3>Set Many Leds</h3>
+      <div class="leds">
+        {{> multi section="All" number="0"}}
+        {{> multi section="Dot" number="1"}}
+        {{> multi section="Outside" number="2"}}
+        {{> multi section="Inside" number="3"}}
+      </div>
+      <h3>Set One Led</h3>
+      <div class="leds">
+        {{> led}}
       </div>
       <h3>Animations</h3>
       <div class="animations">
         {{> animation number="0" name="Rainbow"}}
         {{> animation number="1" name="US Flag"}}
+        {{> animation number="2" name="Chase"}}
       </div>
     </div>
   </div><!-- /.container -->
 </body>
 
-<template name="led">
-  <button>Set {{number}}</button>
+
+<template name="main layout">
+  
 </template>
+
+<template name="multi">
+  <button>Set {{section}}</button>
+</template>
+
+<template name="led">
+  <form class="single">
+    <input type="text" name="text" />
+    <input type="submit" value="Set" placeholder="Enter 1-64">
+  </form>
+</template>
+
 
 <template name="colorpicker">
   <input type="text" id="colorpicker">

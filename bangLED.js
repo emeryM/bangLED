@@ -1,12 +1,41 @@
 if (Meteor.isClient) {
 
-  Template.led.events({
+  Template.multi.events({
     'click button': function () {
       Meteor.call(
-        "setColor",
+        "setAllColor",
         Template.currentData().number,
         $("#colorpicker").spectrum("get"));
     }
+  });
+
+  Template.led.events({
+    'click button': function () {
+      Meteor.call(
+        "setSingleColor",
+        Template.currentData().number,
+        $("#colorpicker").spectrum("get"));
+    }
+  });
+
+  Template.led.events({
+    'submit .single'(event) {
+      // Prevent default browser form submit
+      event.preventDefault();
+
+      // Get value from form element
+      const target = event.target;
+      const text = target.text.value;
+
+      // Insert a task into the collection
+      Meteor.call(
+        "setSingleColor",
+        text,
+        $("#colorpicker").spectrum("get"));
+
+      // Clear form
+      target.text.value = '';
+    },
   });
 
   Template.animation.events({
@@ -81,7 +110,7 @@ if (Meteor.isServer) {
   });
 
   Meteor.methods({
-      setColor: function (pos, color){
+      setSingleColor: function (pos, color){
         var buf = new Buffer(5);
         buf[0]= 0x00;
         buf[1]= pos;
@@ -109,6 +138,20 @@ if (Meteor.isServer) {
             console.log('wrote ' + results + ' bytes');
         });
       },
+      setAllColor: function (pos, color){
+        var buf = new Buffer(5);
+        buf[0]= 0x02;
+        buf[1]= pos;
+        buf[2]= color._r;
+        buf[3]= color._g;
+        buf[4]= color._b;
+        serialPort.write(buf, function(err, results) {
+            if (err) {
+                console.log('err ' + err);
+            }
+            console.log('wrote ' + results + ' bytes');
+        });
+      },
       blink: function (pos){
         console.log('pos: ' + pos);
         serialPort.write(new Buffer([pos], 'ascii'), function(err, results) {
@@ -126,9 +169,19 @@ if (Meteor.isServer) {
     });
 
 
-  Meteor.startup(function () {
-    // code to run on server at startup
-  });
+    Meteor.startup(() => {
+      var Twit = Meteor.npmRequire('twit');
+      var T = new Twit({
+        consumer_key:         Meteor.settings.consumer_key,
+        consumer_secret:      Meteor.settings.consumer_secret,
+        access_token:         Meteor.settings.access_token,
+        access_token_secret:  Meteor.settings.access_token_secret,
+      });
+      var stream = T.stream('statuses/filter', { follow: '20738245', language: 'en' })
+      stream.on('tweet', function (tweet) {
+        console.log(tweet)
+      })
+    });
 
 
 }
