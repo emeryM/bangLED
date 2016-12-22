@@ -27,3 +27,4 @@ npm-container
 mrt:twit
 meteorhacks:npm
 kadira:blaze-layout
+meteorhacks:flow-router

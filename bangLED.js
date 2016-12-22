@@ -1,5 +1,32 @@
 if (Meteor.isClient) {
 
+  FlowRouter.route('/', {
+  action: function() {
+    BlazeLayout.render("mainLayout", {content: "display"});
+    Meteor.call("twitteroff");
+  }
+  });
+  FlowRouter.route('/display', {
+  action: function() {
+    BlazeLayout.render("mainLayout", {content: "display"});
+    Meteor.call("twitteroff");
+  }
+  });
+  FlowRouter.route('/twitter', {
+  action: function() {
+    BlazeLayout.render("mainLayout", {content: "twitter"});
+    Meteor.call("setAllRed");
+    Meteor.call("twitteron");
+  }
+  });
+  FlowRouter.route('/off', {
+  action: function() {
+    BlazeLayout.render("mainLayout", {content: "off"});
+    Meteor.call("setAllOff");
+    Meteor.call("twitteroff");
+  }
+  });
+
   Template.multi.events({
     'click button': function () {
       Meteor.call(
@@ -42,7 +69,8 @@ if (Meteor.isClient) {
     'click button': function () {
       Meteor.call(
         "setAnimation",
-        Template.currentData().number
+        Template.currentData().number,
+        $("#colorpicker").spectrum("get")
       )
     }
   });
@@ -95,7 +123,29 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
-  var port = "/dev/tty.usbmodem1421";
+  console.log('hi');
+  var Twit = Meteor.npmRequire('twit');
+  var T = new Twit({
+    consumer_key:         Meteor.settings.consumer_key,
+    consumer_secret:      Meteor.settings.consumer_secret,
+    access_token:         Meteor.settings.access_token,
+    access_token_secret:  Meteor.settings.access_token_secret
+  });
+  var stream = T.stream('statuses/filter', { follow: '20738245', language: 'en' })
+  stream.on('tweet', function (tweet) {
+    console.log('omg');
+    if (twittermode == 1){
+      console.log('omg twitter mode');
+      if(tweet.user.id == '20738245'){
+        console.log('omg morgan');
+        Meteor.call("twitteron");
+      }
+    }
+  });
+
+  var twittermode = 0;
+
+  var port = Meteor.settings.port;
 
   var serialPort = new SerialPort.SerialPort(port, {
     baudrate: 9600,
@@ -124,13 +174,13 @@ if (Meteor.isServer) {
             console.log('wrote ' + results + ' bytes');
         });
       },
-      setAnimation: function (selection){
+      setAnimation: function (selection, color){
         var buf = new Buffer(5);
         buf[0]= 0x01;
         buf[1]= selection;
-        buf[2]= 0x00;
-        buf[3]= 0x00;
-        buf[4]= 0x00;
+        buf[2]= color._r;
+        buf[3]= color._g;
+        buf[4]= color._b;
         serialPort.write(buf, function(err, results) {
             if (err) {
                 console.log('err ' + err);
@@ -152,6 +202,42 @@ if (Meteor.isServer) {
             console.log('wrote ' + results + ' bytes');
         });
       },
+      setAllRed: function (){
+        var buf = new Buffer(5);
+        buf[0]= 0x02;
+        buf[1]= 0x00;
+        buf[2]= 0xFF;
+        buf[3]= 0x00;
+        buf[4]= 0x00;
+        serialPort.write(buf, function(err, results) {
+            if (err) {
+                console.log('err ' + err);
+            }
+            console.log('wrote ' + results + ' bytes');
+        });
+      },
+      setAllOff: function (){
+        var buf = new Buffer(5);
+        buf[0]= 0x02;
+        buf[1]= 0x00;
+        buf[2]= 0x00;
+        buf[3]= 0x00;
+        buf[4]= 0x00;
+        serialPort.write(buf, function(err, results) {
+            if (err) {
+                console.log('err ' + err);
+            }
+            console.log('wrote ' + results + ' bytes');
+        });
+      },
+      twitteron: function (){
+        console.log('twitter mode on');
+        twittermode = 1;
+      },
+      twitteroff: function (){
+        console.log('twitter mode off');
+        twittermode = 0;
+      },
       blink: function (pos){
         console.log('pos: ' + pos);
         serialPort.write(new Buffer([pos], 'ascii'), function(err, results) {
@@ -170,17 +256,7 @@ if (Meteor.isServer) {
 
 
     Meteor.startup(() => {
-      var Twit = Meteor.npmRequire('twit');
-      var T = new Twit({
-        consumer_key:         Meteor.settings.consumer_key,
-        consumer_secret:      Meteor.settings.consumer_secret,
-        access_token:         Meteor.settings.access_token,
-        access_token_secret:  Meteor.settings.access_token_secret,
-      });
-      var stream = T.stream('statuses/filter', { follow: '20738245', language: 'en' })
-      stream.on('tweet', function (tweet) {
-        console.log(tweet)
-      })
+
     });
 
 
